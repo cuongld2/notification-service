@@ -39,25 +39,14 @@ func getEnv(key, def string) string {
 
 func main() {
 
-	api := slack.New("xoxb-3517990543552-3498517567635-CX5hwEl01DUYCDXtxSzF40zp")
-	// If you set debugging, it will log all requests to the console
-	// Useful when encountering issues
-	// slack.New("YOUR_TOKEN_HERE", slack.OptionDebug(true))
-	groups, err := api.GetUserGroups(slack.GetUserGroupsOptionIncludeUsers(false))
-	if err != nil {
-		fmt.Printf("%s\n", err)
-		return
-	}
-	for _, group := range groups {
-		fmt.Printf("ID: %s, Name: %s\n", group.ID, group.Name)
-	}
+	api := slack.New(getEnv("BOT_TOKEN", "token"))
 
 	// Configuration parameters
 	brokerConfig := config.ServicePropertyMap{
-		config.TransportLayerPropertyHost:                "tcps://mrbhn5fvgw72c.messaging.solace.cloud:55443",
-		config.ServicePropertyVPNName:                    "payment-broker",
-		config.AuthenticationPropertySchemeBasicUserName: "solace-cloud-client",
-		config.AuthenticationPropertySchemeBasicPassword: "sp6c596qno9oq3cdsm80dp4eo4",
+		config.TransportLayerPropertyHost:                getEnv("TransportLayerPropertyHost", "tcps://"),
+		config.ServicePropertyVPNName:                    getEnv("ServicePropertyVPNName", "brokername"),
+		config.AuthenticationPropertySchemeBasicUserName: getEnv("AuthenticationPropertySchemeBasicUserName", "clientName"),
+		config.AuthenticationPropertySchemeBasicPassword: getEnv("AuthenticationPropertySchemeBasicPassword", "password"),
 	}
 	messagingService, err := messaging.NewMessagingServiceBuilder().FromConfigurationProvider(brokerConfig).WithTransportSecurityStrategy(config.NewTransportSecurityStrategy().WithoutCertificateValidation()).
 		Build()
@@ -98,8 +87,8 @@ func main() {
 
 		if strings.Contains(messageTransfer, messageBody) {
 
-			api.PostMessage("C03EJ6VUTKL", slack.MsgOptionText("A new user bought a product", false))
-			api.PostMessage("C03EJ6VUTKL", slack.MsgOptionText(messageTransfer, false))
+			api.PostMessage(getEnv("CHANNEL_ID", "channel_id"), slack.MsgOptionText("A new user bought a product", false))
+			api.PostMessage(getEnv("CHANNEL_ID", "token"), slack.MsgOptionText(messageTransfer, false))
 		}
 
 		messageTransfer = ""
