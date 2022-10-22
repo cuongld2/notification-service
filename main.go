@@ -1,13 +1,22 @@
 package main
 
 import (
+	"os"
+
 	"github.com/slack-go/slack"
 )
 
+func getEnv(key, def string) string {
+	if val, ok := os.LookupEnv(key); ok {
+		return val
+	}
+	return def
+}
+
 func main() {
 
-	api := slack.New("xoxb-3517990543552-3498517567635-CX5hwEl01DUYCDXtxSzF40zp")
+	api := slack.New(getEnv("BOT_TOKEN", "abcxyz"))
 
-	api.PostMessage("C03EJ6VUTKL", slack.MsgOptionText("Hello Customer Service Team", false))
+	api.PostMessage(getEnv("CHANNEL_ID", "abcxyz"), slack.MsgOptionText("Hello Customer Service Team", false))
 
 }
