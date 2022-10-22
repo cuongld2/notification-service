@@ -14,5 +14,3 @@ github.com/slack-go/slack v0.11.3/go.mod h1:hlGi5oXA+Gt+yWTPP0plCdRKmjsDxecdHxYQ
 github.com/stretchr/testify v1.2.2 h1:bSDNvY7ZPG5RlJ8otE/7V6gMiyenm9RtJ7IUVIAoJ1w=
 github.com/stretchr/testify v1.2.2/go.mod h1:a8OnRcib4nhh0OaRAV+Yts87kKdq0PP7pXfy6kDkUVs=
 golang.org/x/xerrors v0.0.0-20191204190536-9bdfabe68543/go.mod h1:I/5z698sn9Ka8TeJc9MKroUUfqBBauWjQqLJ2OPfmY0=
-solace.dev/go/messaging v1.0.1 h1:ZIH1cmPgKJndPVBmEF8iWIR2TSZdsXtR3AdYR076mSU=
-solace.dev/go/messaging v1.0.1/go.mod h1:QKqAKqxKX5v0G9PEuRpe9wBNbEuj/ncbrkqsNArT7L0=
