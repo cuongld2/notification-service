@@ -25,10 +25,10 @@ func MessageHandlerEuro(message message.InboundMessage) {
 
 	fmt.Printf("Received Message Body %s \n", messageBody)
 
-	api := slack.New(getEnv("BOT_TOKEN", "xoxb-3517990543552-3498517567635-CX5hwEl01DUYCDXtxSzF40zp"))
+	api := slack.New(getEnv("BOT_TOKEN", "token"))
 
-	api.PostMessage(getEnv("CHANNEL_ID", "C03EJ6VUTKL"), slack.MsgOptionText("A new user bought a product using card visa with currency is EURO", false))
-	api.PostMessage(getEnv("CHANNEL_ID", "C03EJ6VUTKL"), slack.MsgOptionText(messageBody, false))
+	api.PostMessage(getEnv("CHANNEL_ID", "channel_id"), slack.MsgOptionText("A new user bought a product using card visa with currency is EURO", false))
+	api.PostMessage(getEnv("CHANNEL_ID", "channel_id"), slack.MsgOptionText(messageBody, false))
 }
 
 func MessageHandlerUsd(message message.InboundMessage) {
@@ -42,10 +42,10 @@ func MessageHandlerUsd(message message.InboundMessage) {
 
 	fmt.Printf("Received Message Body %s \n", messageBody)
 
-	api := slack.New(getEnv("BOT_TOKEN", "xoxb-3517990543552-3498517567635-CX5hwEl01DUYCDXtxSzF40zp"))
+	api := slack.New(getEnv("BOT_TOKEN", "token"))
 
-	api.PostMessage(getEnv("CHANNEL_ID", "C03EJ6VUTKL"), slack.MsgOptionText("A new user bought a product using card visa with currency is USD", false))
-	api.PostMessage(getEnv("CHANNEL_ID", "C03EJ6VUTKL"), slack.MsgOptionText(messageBody, false))
+	api.PostMessage(getEnv("CHANNEL_ID", "channel_id"), slack.MsgOptionText("A new user bought a product using card visa with currency is USD", false))
+	api.PostMessage(getEnv("CHANNEL_ID", "channel_id"), slack.MsgOptionText(messageBody, false))
 }
 
 func getEnv(key, def string) string {
@@ -59,10 +59,10 @@ func main() {
 
 	// Configuration parameters
 	brokerConfig := config.ServicePropertyMap{
-		config.TransportLayerPropertyHost:                getEnv("TransportLayerPropertyHost", "tcps://mrbhn5fvgw72c.messaging.solace.cloud:55443"),
-		config.ServicePropertyVPNName:                    getEnv("ServicePropertyVPNName", "payment-broker"),
+		config.TransportLayerPropertyHost:                getEnv("TransportLayerPropertyHost", "tcps://"),
+		config.ServicePropertyVPNName:                    getEnv("ServicePropertyVPNName", "brokerName"),
 		config.AuthenticationPropertySchemeBasicUserName: getEnv("AuthenticationPropertySchemeBasicUserName", "solace-cloud-client"),
-		config.AuthenticationPropertySchemeBasicPassword: getEnv("AuthenticationPropertySchemeBasicPassword", "sp6c596qno9oq3cdsm80dp4eo4"),
+		config.AuthenticationPropertySchemeBasicPassword: getEnv("AuthenticationPropertySchemeBasicPassword", "password"),
 	}
 	messagingService, err := messaging.NewMessagingServiceBuilder().FromConfigurationProvider(brokerConfig).WithTransportSecurityStrategy(config.NewTransportSecurityStrategy().WithoutCertificateValidation()).
 		Build()
