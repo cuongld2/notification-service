@@ -3,7 +3,6 @@ package main
 import (
 	"fmt"
 	"os"
-	"strings"
 
 	"github.com/slack-go/slack"
 	"solace.dev/go/messaging"
@@ -13,11 +12,9 @@ import (
 )
 
 // Define Topic Prefix
-const TopicPrefix = "solace/payment"
+const TopicPrefix = "events/payment-service"
 
-var messageTransfer string
-
-func MessageHandler(message message.InboundMessage) {
+func MessageHandlerEuro(message message.InboundMessage) {
 	var messageBody string
 
 	if payload, ok := message.GetPayloadAsString(); ok {
@@ -27,7 +24,28 @@ func MessageHandler(message message.InboundMessage) {
 	}
 
 	fmt.Printf("Received Message Body %s \n", messageBody)
-	messageTransfer = messageBody
+
+	api := slack.New(getEnv("BOT_TOKEN", "xoxb-3517990543552-3498517567635-CX5hwEl01DUYCDXtxSzF40zp"))
+
+	api.PostMessage(getEnv("CHANNEL_ID", "C03EJ6VUTKL"), slack.MsgOptionText("A new user bought a product using card visa with currency is EURO", false))
+	api.PostMessage(getEnv("CHANNEL_ID", "C03EJ6VUTKL"), slack.MsgOptionText(messageBody, false))
+}
+
+func MessageHandlerUsd(message message.InboundMessage) {
+	var messageBody string
+
+	if payload, ok := message.GetPayloadAsString(); ok {
+		messageBody = payload
+	} else if payload, ok := message.GetPayloadAsBytes(); ok {
+		messageBody = string(payload)
+	}
+
+	fmt.Printf("Received Message Body %s \n", messageBody)
+
+	api := slack.New(getEnv("BOT_TOKEN", "xoxb-3517990543552-3498517567635-CX5hwEl01DUYCDXtxSzF40zp"))
+
+	api.PostMessage(getEnv("CHANNEL_ID", "C03EJ6VUTKL"), slack.MsgOptionText("A new user bought a product using card visa with currency is USD", false))
+	api.PostMessage(getEnv("CHANNEL_ID", "C03EJ6VUTKL"), slack.MsgOptionText(messageBody, false))
 }
 
 func getEnv(key, def string) string {
@@ -39,14 +57,12 @@ func getEnv(key, def string) string {
 
 func main() {
 
-	api := slack.New(getEnv("BOT_TOKEN", "token"))
-
 	// Configuration parameters
 	brokerConfig := config.ServicePropertyMap{
-		config.TransportLayerPropertyHost:                getEnv("TransportLayerPropertyHost", "tcps://"),
-		config.ServicePropertyVPNName:                    getEnv("ServicePropertyVPNName", "brokername"),
-		config.AuthenticationPropertySchemeBasicUserName: getEnv("AuthenticationPropertySchemeBasicUserName", "clientName"),
-		config.AuthenticationPropertySchemeBasicPassword: getEnv("AuthenticationPropertySchemeBasicPassword", "password"),
+		config.TransportLayerPropertyHost:                getEnv("TransportLayerPropertyHost", "tcps://mrbhn5fvgw72c.messaging.solace.cloud:55443"),
+		config.ServicePropertyVPNName:                    getEnv("ServicePropertyVPNName", "payment-broker"),
+		config.AuthenticationPropertySchemeBasicUserName: getEnv("AuthenticationPropertySchemeBasicUserName", "solace-cloud-client"),
+		config.AuthenticationPropertySchemeBasicPassword: getEnv("AuthenticationPropertySchemeBasicPassword", "sp6c596qno9oq3cdsm80dp4eo4"),
 	}
 	messagingService, err := messaging.NewMessagingServiceBuilder().FromConfigurationProvider(brokerConfig).WithTransportSecurityStrategy(config.NewTransportSecurityStrategy().WithoutCertificateValidation()).
 		Build()
@@ -64,7 +80,7 @@ func main() {
 
 	//  Build a Direct Message Receiver
 	directReceiver, err := messagingService.CreateDirectMessageReceiverBuilder().
-		WithSubscriptions(resource.TopicSubscriptionOf(TopicPrefix + "/*/hello/>")).
+		WithSubscriptions(resource.TopicSubscriptionOf(TopicPrefix + "/*/EUR/pm_card_visa/>")).
 		Build()
 
 	if err != nil {
@@ -78,28 +94,31 @@ func main() {
 
 	fmt.Println("Direct Receiver running? ", directReceiver.IsRunning())
 
-	messageBody := "Payment intent confirmed has id is :"
+	//  Build a Direct Message Receiver
+	anotherDirectReceiver, err := messagingService.CreateDirectMessageReceiverBuilder().
+		WithSubscriptions(resource.TopicSubscriptionOf(TopicPrefix + "/*/USD/pm_card_visa/>")).
+		Build()
+
+	if err != nil {
+		panic(err)
+	}
+
+	// Start another Direct Message Receiver
+	if err := anotherDirectReceiver.Start(); err != nil {
+		panic(err)
+	}
+
+	fmt.Println("Direct Receiver running? ", anotherDirectReceiver.IsRunning())
+
 	for 1 != 0 {
 
-		if regErr := directReceiver.ReceiveAsync(MessageHandler); regErr != nil {
+		if regErr := directReceiver.ReceiveAsync(MessageHandlerEuro); regErr != nil {
 			panic(regErr)
 		}
 
-		if strings.Contains(messageTransfer, messageBody) {
-
-			api.PostMessage(getEnv("CHANNEL_ID", "channel_id"), slack.MsgOptionText("A new user bought a product", false))
-			api.PostMessage(getEnv("CHANNEL_ID", "token"), slack.MsgOptionText(messageTransfer, false))
+		if regErr := anotherDirectReceiver.ReceiveAsync(MessageHandlerUsd); regErr != nil {
+			panic(regErr)
 		}
 
-		messageTransfer = ""
-
 	}
-
-	// // Terminate the Direct Receiver
-	// directReceiver.Terminate(2 * time.Second)
-	// fmt.Println("\nDirect Receiver Terminated? ", directReceiver.IsTerminated())
-
-	// // Disconnect the Message Service
-	// messagingService.Disconnect()
-	// fmt.Println("Messaging Service Disconnected? ", !messagingService.IsConnected())
 }
